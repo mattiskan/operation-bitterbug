@@ -4,9 +4,11 @@ import urllib.request
 import pickle
 import os.path
 import re
+import threading
 
 def parse_posts(link):
     url = "%s%s" % ("http://www.familjeliv.se", link)
+
     post_data = parse_post(url)
 
     if post_data:
@@ -40,7 +42,7 @@ def write_post(post_data, url):
 def tokenize(data):
     data = data.replace("\n", " ").lower()
 
-    data = data.replace("-", "")
+    data = data.replace("-", " ")
     data = data.replace("(", "")
     data = data.replace(")", "")    
     
@@ -61,15 +63,20 @@ def check(word):
 
 forum_prefix="http://www.familjeliv.se/forum"
 def parse_forum_page(fid, sidnummer):
-    url = "%s/%d/latest/%d" % (forum_prefix, fid, sidnummer)
-    webpage = urllib.request.urlopen(url)
-    soup = bs4.BeautifulSoup(webpage.read().decode('utf8'))
+    try:
+        url = "%s/%d/latest/%d" % (forum_prefix, fid, sidnummer)
+        webpage = urllib.request.urlopen(url)
+        soup = bs4.BeautifulSoup(webpage.read().decode('utf8'))
 
-    links = soup.find(id="forum-threadlist")
+        links = soup.find(id="forum-threadlist")
 
-    return [ link.find('a').get('href')
-             for link in links.find_all('td', 'thread') ]
-
+        return [ link.find('a').get('href')
+                 for link in links.find_all('td', 'thread') ]
+    except:
+        pass
+    
+    return [ 'anything' ]
+        
 def parse_forum(fid):
     pagenum = 1
     links = parse_forum_page(fid, 1)
@@ -80,8 +87,15 @@ def parse_forum(fid):
         if page in visited:
             pagenum += 1
             continue
-        
-        [ parse_posts(link) for link in links ]
+
+
+        while threading.active_count() > 120:
+            print("sleeping")
+            time.sleep(1)
+            print("done sleeping")
+
+        [ threading.Thread(target=parse_posts, args=(link,) ).start()
+          for link in links ]
 
         visited.add(page)
         pagenum += 1
