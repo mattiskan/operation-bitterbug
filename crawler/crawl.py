@@ -5,12 +5,8 @@ import pickle
 import os.path
 
 
-VISITED = 0
-FAILED = 1
-
 def parse_posts(link):
     url = "%s%s" % ("http://www.familjeliv.se", link)
-    print(url)
     post_data = parse_post(url)
 
     if post_data:
@@ -25,7 +21,7 @@ def parse_post(url):
         soup = bs4.BeautifulSoup(webpage.read().decode('utf8'))
     except UnicodeDecodeError:
         print("fail")
-        return FAILED
+        return False
 
     return [ anchor.getText()
              for anchor in soup.find_all('div', 'message-body') ]
@@ -35,9 +31,7 @@ def write_post(post_data, url):
     filename = "posts/%s" % url.split("/")[-1]
 
     with open(filename, 'w') as output:
-        output.write('[')
-        output.write(",".join(post_data).replace("\n", " "))
-        output.write(']')
+        output.write(" ".join(post_data).replace("\n", " "))
 
     visited.add(url)
     print("added", url)
@@ -86,7 +80,5 @@ if __name__ == "__main__":
     try:
         parse_forum(1)
     finally:
-        print("wrote")
+        print("wrote visited")
         write_visited()
-
-    write_visited()
