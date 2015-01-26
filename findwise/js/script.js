@@ -124,7 +124,14 @@ var AutoComplete = {
 ];*/
 
 
+
 $(function() {
+    $('#search').keyup(function(event) {
+	var keypressed = event.keyCode || event.which;
+	if (keypressed == 13)
+	    showResult();
+    });
+
     //console.log(data);
     AutoComplete.parseText(data);
     //console.log(AutoComplete, AutoComplete.getWord(["^", "vi", "is"]));
