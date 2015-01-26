@@ -130,7 +130,7 @@ $(function() {
 	var keypressed = event.keyCode || event.which;
 	if (keypressed == 13)
 	    showResult();
-    });
+    }).focus();
 
     //console.log(data);
     AutoComplete.parseText(data);
